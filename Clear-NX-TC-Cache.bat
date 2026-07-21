@@ -26,17 +26,17 @@ echo [1/4] Stopping NX (ugraf.exe)...
 taskkill /F /IM "ugraf.exe" >nul 2>&1 && echo   - stopped ugraf.exe || echo   - ugraf.exe not running
 
 REM ------------------------------------------------------------
-REM Step 2: Kill the Zulu Java process used by NX/TC
-REM   Only javaw.exe launched from the Siemens PLM JRE
-REM   (C:\SPLM\Java) is terminated, so other Java apps
-REM   are left alone.
+REM Step 2: Kill the Zulu Java process(es) used by NX/TC
+REM   Every java.exe / javaw.exe launched from the Siemens
+REM   PLM install (C:\SPLM) is terminated, so other Java
+REM   apps are left alone. Multiple instances are all killed.
 REM ------------------------------------------------------------
-echo [2/4] Stopping NX/TC Java (Zulu) process...
+echo [2/4] Stopping NX/TC Java (Zulu) process(es)...
 set "_killedjava="
-for /f "usebackq delims=" %%I in (`powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'javaw.exe' -and $_.ExecutablePath -like 'C:\SPLM\Java\*' } | Select-Object -ExpandProperty ProcessId"`) do (
+for /f "usebackq delims=" %%I in (`powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { ($_.Name -eq 'javaw.exe' -or $_.Name -eq 'java.exe') -and $_.ExecutablePath -like 'C:\SPLM\*' } | Select-Object -ExpandProperty ProcessId"`) do (
     taskkill /F /PID %%I >nul 2>&1 && echo   - stopped Java PID %%I && set "_killedjava=1"
 )
-if not defined _killedjava echo   - no Zulu Java process found
+if not defined _killedjava echo   - no Zulu Java process(es) found
 
 REM ------------------------------------------------------------
 REM Step 3: Delete the contents of the Temp folder
